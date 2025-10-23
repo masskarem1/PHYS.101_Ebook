@@ -1,352 +1,108 @@
-/* ========== Global ========== */
 body {
   margin: 0;
-  font-family: "Segoe UI", Roboto, Arial, sans-serif;
-  background-color: #f4f6fa;
-  color: #222;
-  overflow-x: hidden;
-}
-
-button {
-  cursor: pointer;
-  border: none;
-  border-radius: 6px;
-  background-color: #0066cc;
-  color: #fff;
-  padding: 6px 12px;
-  margin: 2px;
-  font-size: 14px;
-  transition: background-color 0.2s;
-}
-
-button:hover {
-  background-color: #004999;
-}
-
-input[type="number"],
-input[type="text"] {
-  padding: 5px 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-/* ========== Lock Screen ========== */
-#lockScreen {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.7);
-  z-index: 9999;
-  justify-content: center;
-  align-items: center;
-}
-
-.lock-box {
-  background: white;
-  padding: 30px 40px;
-  border-radius: 12px;
-  text-align: center;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
-}
-
-/* ========== Toolbar ========== */
-.toolbar-container {
-  position: sticky;
-  top: 0;
-  background: #fff;
-  border-bottom: 1px solid #ddd;
-  z-index: 1000;
-}
-
-.toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  padding: 6px;
-  gap: 5px;
-}
-
-.highlight-buttons-group {
-  display: flex;
-  gap: 2px;
-}
-
-/* ========== Highlight Popup ========== */
-#highlight-popup {
-  position: absolute;
-  top: 50px;
-  left: 10px;
-  background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
-  padding: 10px;
-  display: none;
-  z-index: 999;
-}
-
-.highlight-popup.active {
-  display: block;
-}
-
-.popup-section {
-  margin-bottom: 8px;
-}
-
-.color-swatches {
-  display: flex;
-  gap: 6px;
-}
-
-.color-swatch {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  cursor: pointer;
-  border: 2px solid transparent;
-}
-
-.color-swatch.active {
-  border-color: #000;
-}
-
-.tool-btn {
-  padding: 4px 8px;
-  font-size: 13px;
-  border-radius: 6px;
-  background: #f0f0f0;
+  font-family: "Segoe UI", sans-serif;
+  background-color: #f4f6f9;
   color: #333;
-}
-
-.tool-btn.active {
-  background: #0066cc;
-  color: #fff;
-}
-
-/* ========== Search Bar ========== */
-#searchContainer {
-  display: none;
-  position: absolute;
-  top: 55px;
-  right: 10px;
-  width: 260px;
-  background: #fff;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
-  z-index: 999;
-  padding: 10px;
-}
-
-#searchResults {
-  max-height: 200px;
-  overflow-y: auto;
-  margin-top: 5px;
-}
-
-#searchResults div {
-  padding: 4px;
-  cursor: pointer;
-}
-
-#searchResults div:hover {
-  background: #eaeaea;
-}
-
-/* ========== Flipbook & Pages ========== */
-#flipbook {
-  position: relative;
-  width: 100%;
   display: flex;
-  justify-content: center;
-  align-items: center;
-  background: #fdfdfd;
-  min-height: calc(100vh - 160px);
-  overflow: hidden;
+  flex-direction: column;
+  height: 100vh;
 }
 
-.page-wrap {
-  position: relative;
-  overflow: hidden;
-  touch-action: none;
-}
-
-.page-image {
-  width: 100%;
-  max-width: 100%;
-  user-select: none;
-  display: block;
-}
-
-#highlight-canvas {
-  position: absolute;
-  top: 0;
-  left: 0;
-}
-
-/* ========== Thumbnail Bar ========== */
-#thumbbar {
-  display: flex;
-  overflow-x: auto;
-  gap: 5px;
-  background: #eee;
-  padding: 5px 10px;
-  border-bottom: 1px solid #ccc;
-}
-
-#thumbbar img {
-  height: 60px;
-  cursor: pointer;
-  border: 2px solid transparent;
-  border-radius: 6px;
-  transition: border-color 0.2s;
-}
-
-#thumbbar img.active {
-  border-color: #0066cc;
-}
-
-/* ========== Footer ========== */
-#footer {
+/* Toolbar */
+.toolbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 12px;
+  background: #0056b3;
+  color: white;
+  padding: 0.6rem 1rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+.toolbar h1 {
+  font-size: 1.2rem;
+}
+.toolbar-buttons button {
+  margin-left: 0.4rem;
+  padding: 0.4rem 0.8rem;
+  border: none;
+  border-radius: 6px;
   background: #fff;
-  border-top: 1px solid #ddd;
-  position: sticky;
-  bottom: 0;
-  z-index: 999;
+  color: #0056b3;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.toolbar-buttons button:hover {
+  background: #e6e6e6;
 }
 
-#indexMenu {
-  position: absolute;
-  bottom: 40px;
-  left: 10px;
-  background: #fff;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  padding: 10px;
-  display: none;
-  z-index: 999;
-}
-
-/* ========== AI Helper ========== */
-#aiHelperToggle {
-  position: fixed;
-  bottom: 80px;
-  right: 25px;
-  font-size: 20px;
-  padding: 10px 14px;
-  border-radius: 50%;
-  background-color: #ff6b00;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
-  z-index: 1500;
-}
-
-#aiHelperModal {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+/* Flipbook */
+#flipbook-container {
+  flex-grow: 1;
+  display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 2000;
+  overflow: hidden;
+}
+.page-image {
+  max-width: 90%;
+  max-height: 85vh;
+  border-radius: 8px;
+  box-shadow: 0 0 12px rgba(0,0,0,0.3);
+}
+.loading-text {
+  font-size: 1.2rem;
+  color: #777;
 }
 
-.ai-content {
-  background: #fff;
-  border-radius: 12px;
-  padding: 20px 25px;
+/* Modal */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 100;
+  left: 0; top: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.6);
+}
+.modal-content {
+  background: white;
+  margin: 10% auto;
+  padding: 20px;
+  border-radius: 8px;
   width: 90%;
   max-width: 500px;
   position: relative;
-  max-height: 85vh;
-  overflow-y: auto;
 }
-
-#aiCloseBtn {
+.close {
   position: absolute;
-  top: 8px;
-  right: 8px;
-  background: #e74c3c;
-  color: #fff;
-  border-radius: 50%;
-  width: 28px;
-  height: 28px;
-  font-size: 16px;
+  right: 10px; top: 10px;
+  font-size: 24px;
+  cursor: pointer;
 }
-
-.ai-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 10px;
-}
-
-.ai-response {
-  border: 1px solid #ccc;
-  background: #fafafa;
-  padding: 8px;
-  border-radius: 6px;
-  min-height: 80px;
-  white-space: pre-wrap;
-}
-
-/* ========== Modals (PhET & Video) ========== */
-#phetModal,
-#videoModal {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  justify-content: center;
-  align-items: center;
-  z-index: 3000;
-}
-
-.phet-content,
-.video-content {
-  background: #fff;
-  border-radius: 12px;
-  width: 90%;
-  max-width: 900px;
-  height: 80%;
-  position: relative;
-  overflow: hidden;
-}
-
-#phetFrame,
-#videoFrame {
+textarea {
   width: 100%;
-  height: 100%;
+  height: 100px;
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  resize: none;
+}
+button[type="submit"] {
+  background: #0056b3;
+  color: white;
   border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  margin-top: 10px;
+  cursor: pointer;
 }
-
-#phetCloseBtn,
-#videoCloseBtn {
-  position: absolute;
-  top: 5px;
-  right: 10px;
-  font-size: 18px;
-  background: #e74c3c;
-  border-radius: 50%;
-  color: #fff;
-  width: 28px;
-  height: 28px;
+button[type="submit"]:hover {
+  background: #004099;
 }
-
-/* ========== Responsive ========== */
-@media (max-width: 600px) {
-  .toolbar {
-    flex-direction: column;
-  }
-  #thumbbar img {
-    height: 45px;
-  }
-  .ai-content {
-    width: 95%;
-  }
+.ai-output {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f7f7f7;
+  border-radius: 6px;
+  font-size: 0.95rem;
 }
