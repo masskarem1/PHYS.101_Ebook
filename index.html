@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Interactive Physics eBook</title>
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+  <!-- Config -->
+  <script src="config.js"></script>
+</head>
+<body>
+
+  <!-- 🔐 Lock Screen (optional) -->
+  <div id="lockScreen" class="hidden">
+    <div class="lock-box">
+      <h2>Enter Student ID</h2>
+      <input type="text" id="studentID" placeholder="Student ID" />
+      <button id="loginBtn">Login</button>
+      <p id="loginError"></p>
+    </div>
+  </div>
+
+  <!-- 🧭 Toolbar -->
+  <header class="toolbar-container">
+    <button id="firstBtn">⏮</button>
+    <button id="prevBtn">◀</button>
+    <input id="pageInput" type="number" min="1" />
+    <span id="pageCount">/ 0</span>
+    <button id="nextBtn">▶</button>
+    <button id="lastBtn">⏭</button>
+
+    <button id="drawToggle">✏️ Draw</button>
+    <button id="highlightToggle">🖍️ Highlight</button>
+    <button id="searchBtn">🔍</button>
+    <button id="aiBtn">🧠</button>
+    <button id="phetBtn" class="hidden">⚙️ Sim</button>
+    <button id="videoBtn" class="hidden">🎬 Video</button>
+  </header>
+
+  <!-- 🔍 Search -->
+  <div id="searchContainer" class="popup hidden">
+    <input type="text" id="searchInput" placeholder="Search..." />
+    <button id="closeSearch">×</button>
+    <ul id="searchResults"></ul>
+  </div>
+
+  <!-- 📖 Main Flipbook -->
+  <main id="flipbook">
+    <div class="page-wrap">
+      <img id="pageImage" class="page-image" src="" alt="Book Page" />
+      <canvas id="highlightCanvas"></canvas>
+    </div>
+  </main>
+
+  <!-- 🧩 Thumbnails -->
+  <div id="thumbbar"></div>
+
+  <!-- 🧠 AI Helper Modal -->
+  <div id="aiHelperModal" class="modal hidden">
+    <div class="modal-content">
+      <h2>AI Assistant</h2>
+      <div class="btn-group">
+        <button class="ai-action" data-action="explain">Explain</button>
+        <button class="ai-action" data-action="quiz">Quiz</button>
+        <button class="ai-action" data-action="relate">Relate</button>
+        <button class="ai-action" data-action="analyze">Analyze Page</button>
+        <button class="ai-action" data-action="translate">Translate Page</button>
+      </div>
+      <div id="aiResponse"></div>
+      <button id="translateResponseBtn" class="hidden">Translate Analysis</button>
+      <div id="aiLoading" class="hidden">Loading...</div>
+      <button id="closeAI">×</button>
+    </div>
+  </div>
+
+  <!-- 🌐 Overlay Translation -->
+  <div id="overlay-translation" class="hidden">
+    <button id="closeTranslation">×</button>
+    <div id="translationContent"></div>
+  </div>
+
+  <!-- 🎥 Video Modal -->
+  <div id="videoModal" class="modal hidden">
+    <div class="modal-content">
+      <button class="closeModal">×</button>
+      <iframe id="videoFrame" allowfullscreen></iframe>
+    </div>
+  </div>
+
+  <!-- ⚙️ PhET Simulation Modal -->
+  <div id="phetModal" class="modal hidden">
+    <div class="modal-content">
+      <button class="closeModal">×</button>
+      <iframe id="phetFrame"></iframe>
+    </div>
+  </div>
+
+  <!-- 📖 Index Menu -->
+  <footer>
+    <button id="indexToggle">☰ Index</button>
+    <ul id="indexMenu" class="hidden"></ul>
+  </footer>
+
+  <!-- App Script -->
+  <script src="app.js" defer></script>
+</body>
+</html>
