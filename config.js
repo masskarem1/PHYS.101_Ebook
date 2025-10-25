@@ -6,8 +6,8 @@ const config = {
 
   // --- Security & API ---
   requireLogin: false, // Set to true to enable student ID login
-  appsScriptProxyUrl: 'https://script.google.com/macros/s/AKfycbxzKK4RKp0rpCZcznOYPyV4aWMhBZLqYSn_ZFyNe3EO6_MxPWHZ3laF1QGL6zk6E4-h/exec',
-
+  aiHelperProxyUrl: 'https://script.google.com/macros/s/AKfycbxzKK4RKp0rpCZcznOYPyV4aWMhBZLqYSn_ZFyNe3EO6_MxPWHZ3laF1QGL6zk6E4-h/exec',
+  loginProxyUrl: 'PASTE_YOUR_NEW_LOGIN_SCRIPT_URL_HERE',
   // --- Content (Chapters are now loaded from chapters.json) ---
   chapters: [], 
 
