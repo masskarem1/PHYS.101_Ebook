@@ -5,7 +5,7 @@ const config = {
   thumbPath: './thumbs/Book_PHYS101_',
 
   // --- Security & API ---
-  requireLogin: false, // Set to true to enable student ID login
+  requireLogin: true, // Set to true to enable student ID login
   aiHelperProxyUrl: 'https://script.google.com/macros/s/AKfycbxzKK4RKp0rpCZcznOYPyV4aWMhBZLqYSn_ZFyNe3EO6_MxPWHZ3laF1QGL6zk6E4-h/exec',
   loginProxyUrl: 'https://script.google.com/macros/s/AKfycbzR9crl1SITQ242nb9N4Z6El5PdOIeJha6wTRnuc2mRQJltTF83UmFfhOkftiGlBytr/exec',
   // --- Content (Chapters are now loaded from chapters.json) ---
