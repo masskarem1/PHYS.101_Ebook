@@ -3,6 +3,12 @@
 // Merged Version
 // =======================
 
+// --- CONFIGURATION ACCESS ---
+// NOTE: These definitions read the two separate URLs from config.js:
+const AI_HELPER_PROXY_URL = (typeof config !== 'undefined' && config.aiHelperProxyUrl) ? config.aiHelperProxyUrl : '';
+const LOGIN_PROXY_URL = (typeof config !== 'undefined' && config.loginProxyUrl) ? config.loginProxyUrl : '';
+// The old APPS_SCRIPT_PROXY_URL is no longer used globally.
+
 // --- Global Variables ---
 let currentPage = 1; // 1-based indexing
 let totalPages = (typeof config !== 'undefined' && config.totalPages) ? config.totalPages : 1;
@@ -20,15 +26,18 @@ const imagePath = (typeof config !== 'undefined' && config.imagePath) ? config.i
 const thumbPath = (typeof config !== 'undefined' && config.thumbPath) ? config.thumbPath : './thumbs/Book_PHYS101_';
 const images = Array.from({ length: totalPages }, (_, i) => `${imagePath}${i}.png`);
 const thumbs = Array.from({ length: totalPages }, (_, i) => `${thumbPath}${i}.jpg`);
-const APPS_SCRIPT_PROXY_URL = (typeof config !== 'undefined' && config.appsScriptProxyUrl) ? config.appsScriptProxyUrl : '';
 
-// --- DOM Elements ---
+// --- DOM Elements (Global Definitions) ---
 let flipbook, thumbbar, counter, pageInput, footer, indexToggle, indexMenu, indexSidebar, bookContainer;
 let phetModal, phetBtn, phetCloseBtn, phetFrame, videoModal, videoBtn, videoCloseBtn, videoFrame;
 let toggleDrawModeBtn, highlightSettingsBtn, highlightPopup, colorSwatchesContainer, penToolBtnPopup, highlightToolBtn, eraserToolBtnPopup, brushSizeSliderPopup, clearHighlightsBtnPopup;
 let searchBtn, searchContainer, searchInput, searchCloseBtn, searchResults;
 let aiModal, aiHelperToggle, aiCloseBtn, aiResponseEl, aiLoadingEl, aiChapterTitleEl;
 let highlightCanvas, ctx;
+
+// --- Login DOM Elements (Needed for new logic) ---
+let idInput, codeInput, unlockBtn, idError; 
+// --------------------------------------------------
 
 // --- State Variables ---
 let hammerManager = null;
@@ -101,6 +110,12 @@ function assignDOMElements() {
     aiResponseEl = document.getElementById("aiResponse");
     aiLoadingEl = document.getElementById("aiLoading");
     aiChapterTitleEl = document.getElementById("aiChapterTitle");
+    
+    // --- ADDED: Login screen elements assignment ---
+    idInput = document.getElementById('idInput');
+    codeInput = document.getElementById('codeInput'); 
+    unlockBtn = document.getElementById('unlockBtn');
+    idError = document.getElementById('idError');
 }
 
 /**
@@ -132,49 +147,84 @@ async function initApp() {
     setDrawMode(toolType);
 }
 
-// --- Login System ---
+// Function to get a unique device GUID (stored persistently in browser)
+function getDeviceId() {
+    let deviceId = localStorage.getItem('flipbook-deviceId');
+    if (!deviceId) {
+        // Generate a semi-unique ID on first run
+        deviceId = 'device-' + Date.now().toString(36) + Math.random().toString(36).substring(2, 7);
+        localStorage.setItem('flipbook-deviceId', deviceId);
+    }
+    return deviceId;
+}
+
 function setupLogin() {
+    // 1. If login is required, display the lock screen
     if (typeof config !== 'undefined' && config.requireLogin === true) {
-        loadIDs();
         const lockScreen = document.getElementById('lockScreen');
         if (lockScreen) lockScreen.style.display = 'flex';
     }
 
-    const unlockBtn = document.getElementById('unlockBtn');
+    // 2. Wire the click handler for the new multi-factor login logic
     if (unlockBtn) {
-        unlockBtn.addEventListener('click', () => {
-            const idInput = document.getElementById("idInput");
-            const entered = idInput ? idInput.value.trim() : "";
-            const idError = document.getElementById("idError");
-            if (!idError) return;
-            idError.style.display = 'none';
-            if (!entered) {
-                idError.textContent = 'Please enter an ID';
-                idError.style.display = 'block';
-                return;
-            }
-            if (ALLOWED_IDS.includes(entered)) {
-                const lockScreen = document.getElementById("lockScreen");
-                if (lockScreen) lockScreen.style.display = "none";
-            } else {
-                idError.textContent = 'Invalid ID';
-                idError.style.display = 'block';
-            }
-        });
+        unlockBtn.addEventListener('click', handleUnlock);
     }
 }
 
-async function loadIDs() {
+async function handleUnlock() {
+    // The variables idInput, codeInput, etc., are now globally available after assignDOMElements runs.
+    if (!idError) return;
+    
+    idError.style.display = 'none';
+    const enteredId = idInput ? idInput.value.trim() : '';
+    const enteredCode = codeInput ? codeInput.value.trim() : '';
+    const deviceId = getDeviceId();
+    
+    if (!enteredId || !enteredCode) {
+        idError.textContent = 'Please enter both ID and Code.';
+        idError.style.display = 'block';
+        return;
+    }
+    
+    // --- Step 2: Send data to the Apps Script API for server-side lock ---
     try {
-        const res = await fetch("./students.json");
-        if (!res.ok) throw new Error("File not found");
-        const data = await res.json();
-        ALLOWED_IDS = Array.isArray(data) ? data : (Array.isArray(data.allowed) ? data.allowed : []);
-    } catch (err) {
-        console.error("Could not load student IDs:", err);
-        ALLOWED_IDS = [];
+        const fetchOptions = {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'verifyLockLogin', 
+                studentId: enteredId,
+                loginCode: enteredCode,    
+                deviceId: deviceId
+            })
+        };
+
+        // Use the dedicated LOGIN PROXY URL
+        const response = await fetchWithRetry(LOGIN_PROXY_URL, fetchOptions);
+
+        if (!response.ok) {
+            throw new Error(`Proxy error: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.status === 'success') {
+            // Access granted! Hide lock screen
+            document.getElementById("lockScreen").style.display = "none";
+        } else {
+            // Access denied (Case C or invalid credentials)
+            idError.textContent = data.message || 'Verification failed. Check credentials.';
+            idError.style.display = 'block';
+        }
+
+    } catch (e) {
+        console.error("Login verification failed:", e);
+        idError.textContent = 'Network or server error. Try again.';
+        idError.style.display = 'block';
     }
 }
+
+// --- Part 2 of 3 Starts ---
 
 // --- Data Loading ---
 async function loadBookText() {
@@ -330,7 +380,6 @@ function renderIndex() {
         indexMenu.appendChild(chapterDiv);
     });
 }
-// --- Part 2 of 3 Starts ---
 
 function preloadImages() {
     const nextPageIndex = currentPage; // currentPage is 1-based, so index is currentPage
@@ -399,56 +448,56 @@ function setupToolbar() {
 
 // --- Sidebar Slide Logic (Updated for Aria) ---
 function setupSidebarToggle() {
-    if (!indexToggle || !indexSidebar || !bookContainer) {
-        console.error("Sidebar elements not found in DOM.");
-        return;
-    }
+    if (!indexToggle || !indexSidebar || !bookContainer) {
+        console.error("Sidebar elements not found in DOM.");
+        return;
+    }
 
-    // Ensure sidebar starts hidden
-    indexSidebar.classList.remove("open");
-    bookContainer.classList.remove("shifted");
-    indexToggle.setAttribute("aria-expanded", "false");
-    indexSidebar.setAttribute("aria-hidden", "true");
-    if (indexMenu) indexMenu.setAttribute("aria-hidden", "true"); // Ensure menu starts hidden too
+    // Ensure sidebar starts hidden
+    indexSidebar.classList.remove("open");
+    bookContainer.classList.remove("shifted");
+    indexToggle.setAttribute("aria-expanded", "false");
+    indexSidebar.setAttribute("aria-hidden", "true");
+    if (indexMenu) indexMenu.setAttribute("aria-hidden", "true"); // Ensure menu starts hidden too
 
-    indexToggle.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const isOpen = indexSidebar.classList.toggle("open");
-        indexToggle.setAttribute("aria-expanded", isOpen);
-        indexSidebar.setAttribute("aria-hidden", !isOpen); // Toggle sidebar visibility
-        if (indexMenu) indexMenu.setAttribute("aria-hidden", !isOpen); // <<-- ALSO TOGGLE MENU VISIBILITY
-        bookContainer.classList.toggle("shifted", isOpen);
+    indexToggle.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const isOpen = indexSidebar.classList.toggle("open");
+        indexToggle.setAttribute("aria-expanded", isOpen);
+        indexSidebar.setAttribute("aria-hidden", !isOpen); // Toggle sidebar visibility
+        if (indexMenu) indexMenu.setAttribute("aria-hidden", !isOpen); // <<-- ALSO TOGGLE MENU VISIBILITY
+        bookContainer.classList.toggle("shifted", isOpen);
 
-        // If opening, maybe focus the first item? Optional.
-        // if (isOpen) {
-        //     indexMenu?.querySelector('button, a')?.focus();
-        // }
-    });
+        // If opening, maybe focus the first item? Optional.
+        // if (isOpen) {
+        //     indexMenu?.querySelector('button, a')?.focus();
+        // }
+    });
 }
 
 function openSidebar() {
-    if (indexSidebar && !indexSidebar.classList.contains("open")) {
-        indexSidebar.classList.add("open");
-        if (indexToggle) indexToggle.setAttribute("aria-expanded", "true");
-        indexSidebar.setAttribute("aria-hidden", "false");
-        if (indexMenu) indexMenu.setAttribute("aria-hidden", "false"); // <<-- SET MENU VISIBLE
-        if (bookContainer) bookContainer.classList.add("shifted");
-    }
+    if (indexSidebar && !indexSidebar.classList.contains("open")) {
+        indexSidebar.classList.add("open");
+        if (indexToggle) indexToggle.setAttribute("aria-expanded", "true");
+        indexSidebar.setAttribute("aria-hidden", "false");
+        if (indexMenu) indexMenu.setAttribute("aria-hidden", "false"); // <<-- SET MENU VISIBLE
+        if (bookContainer) bookContainer.classList.add("shifted");
+    }
 }
 
 function closeSidebar() {
-    if (indexSidebar && indexSidebar.classList.contains("open")) {
-        indexSidebar.classList.remove("open");
-        if (indexToggle) {
-            indexToggle.setAttribute("aria-expanded", "false");
-            // --- Keep this fix: Move focus back to the main toggle button ---
-            indexToggle.focus();
-            // --------------------------------------------------------
-        }
-        indexSidebar.setAttribute("aria-hidden", "true");
-        if (indexMenu) indexMenu.setAttribute("aria-hidden", "true"); // <<-- SET MENU HIDDEN
-        if (bookContainer) bookContainer.classList.remove("shifted");
-    }
+    if (indexSidebar && indexSidebar.classList.contains("open")) {
+        indexSidebar.classList.remove("open");
+        if (indexToggle) {
+            indexToggle.setAttribute("aria-expanded", "false");
+            // --- Keep this fix: Move focus back to the main toggle button ---
+            indexToggle.focus();
+            // --------------------------------------------------------
+        }
+        indexSidebar.setAttribute("aria-hidden", "true");
+        if (indexMenu) indexMenu.setAttribute("aria-hidden", "true"); // <<-- SET MENU HIDDEN
+        if (bookContainer) bookContainer.classList.remove("shifted");
+    }
 }
 // --- End Sidebar Logic ---
 
@@ -503,7 +552,8 @@ function setupAIHelper() {
 }
 
 async function getAiHelp(type) {
-    if (!APPS_SCRIPT_PROXY_URL) {
+    // 1. Check the dedicated AI proxy URL
+    if (!AI_HELPER_PROXY_URL) {
         if (aiResponseEl) aiResponseEl.textContent = "AI Helper not configured: Proxy URL missing.";
         return;
     }
@@ -526,7 +576,7 @@ async function getAiHelp(type) {
             }
             requestBody = { contents: [{ parts: [{ text: `Analyze this physics page (from chapter "${chapterTitle}"). Summarize concepts,explain formulas/diagrams,and give a takeaway for a life science student.` }, { inline_data: { mime_type: "image/png", data: imgBase64 } }] }] };
         } else {
-            let promptText;
+            let promptText;
             switch (type) {
                 case "explain":
                     const concept = window.prompt(`Concept from "${chapterTitle}" to explain?`, "Pascal's Principle");
@@ -534,7 +584,7 @@ async function getAiHelp(type) {
                     promptText = `Explain "${concept}" from "${chapterTitle}" simply for life science students.`;
                     break;
                 case "quiz":
-                    promptText = `Generate 2 multiple-choice questions on "${chapterTitle}". Explain the correct answer (bold it).`;
+    1                 promptText = `Generate 2 multiple-choice questions on "${chapterTitle}". Explain the correct answer (bold it).`;
                     break;
                 case "relate":
                     promptText = `Provide 2 examples of how "${chapterTitle}" applies to biology or medicine.`;
@@ -546,7 +596,9 @@ async function getAiHelp(type) {
         }
 
         const fetchOptions = { method: "POST", body: JSON.stringify(requestBody), headers: { 'Content-Type': 'text/plain;charset=utf-8' } };
-        const response = await fetchWithRetry(APPS_SCRIPT_PROXY_URL, fetchOptions);
+        
+        // 2. Use the dedicated AI Helper URL for the API call
+        const response = await fetchWithRetry(AI_HELPER_PROXY_URL, fetchOptions);
 
         if (!response.ok) {
             let errorMsg = `Proxy Error (${response.status}): ${response.statusText}`;
