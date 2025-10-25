@@ -584,7 +584,7 @@ async function getAiHelp(type) {
                     promptText = `Explain "${concept}" from "${chapterTitle}" simply for life science students.`;
                     break;
                 case "quiz":
-    1                 promptText = `Generate 2 multiple-choice questions on "${chapterTitle}". Explain the correct answer (bold it).`;
+                      promptText = `Generate 2 multiple-choice questions on "${chapterTitle}". Explain the correct answer (bold it).`;
                     break;
                 case "relate":
                     promptText = `Provide 2 examples of how "${chapterTitle}" applies to biology or medicine.`;
