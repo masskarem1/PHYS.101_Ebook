@@ -1227,22 +1227,39 @@ function getYoutubeEmbedUrl(url) {
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 async function fetchWithRetry(url, options, maxRetries = 3, initialDelay = 1000) {
-    let attempt = 0; let currentDelay = initialDelay;
+    let attempt = 0;
+    let currentDelay = initialDelay;
     while (attempt <= maxRetries) {
         try {
             const response = await fetch(url, options);
+            // Check for specific server errors that warrant a retry
             if ([503, 429].includes(response.status) && attempt < maxRetries) {
-                console.warn(`Retrying... attempt ${attempt + 1}`);
-                await delay(currentDelay); attempt++; currentDelay *= 2; continue;
+                console.warn(`Fetch attempt ${attempt + 1} failed with status ${response.status}. Retrying in ${currentDelay / 1000}s...`);
+                await delay(currentDelay);
+                attempt++;
+                currentDelay *= 2;
+                continue; // Go to the next loop iteration
             }
-            return response; // Corrected typo here
+            // If response is OK or it's a non-retryable error, return it
+            return response;
         } catch (error) {
             console.error(`Fetch attempt ${attempt + 1} failed:`, error);
-           if (attempt < maxRetries) { // Corrected typo here
-                await delay(currentDelay); attempt++; currentDelay *= 2;
-            } else { throw error; }
+            if (attempt < maxRetries) {
+                console.warn(`Network error during fetch. Retrying in ${currentDelay / 1000}s...`);
+                await delay(currentDelay);
+                attempt++;
+                currentDelay *= 2;
+                // --- >>> THIS LINE WAS MISSING <<< ---
+                continue; // Go to the next loop iteration after delay
+                // ------------------------------------
+            } else {
+                // If it was the last attempt, throw the error
+                console.error("Fetch failed after multiple retries.");
+                throw error;
+            }
         }
     }
+    // This part should ideally not be reached if maxRetries >= 0
     throw new Error("Fetch failed after multiple retries.");
 }
 
